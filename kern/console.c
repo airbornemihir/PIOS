@@ -21,7 +21,7 @@
 
 #include <kern/cpu.h>
 #include <kern/console.h>
-#include <kern/spinlock.h>
+//LAB1 #include <kern/spinlock.h>
 #include <kern/mem.h>
 
 #include <dev/video.h>
@@ -113,7 +113,7 @@ void
 cputs(const char *str)
 {
 	if (read_cs() & 3)
-		return sys_cputs(str);	// use syscall from user mode
+		return ;//LAB1 sys_cputs(str);	// use syscall from user mode
 
 	char ch;
 	while (*str)
