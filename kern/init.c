@@ -31,6 +31,16 @@ static char gcc_aligned(16) user_stack[PAGESIZE];
 #endif
 extern char ROOTEXE_START[];
 
+void inittests() {
+	/*
+	int x = 1, y = 3, z = 4;
+	cprintf("x %d, y %x, z %d\n", x, y, z);
+	*/
+	unsigned int i = 0x00646c72;
+	cprintf("H%x Wo%s", 57616, &i);
+	cprintf("\n");
+}
+
 
 // Called first from entry.S on the bootstrap processor,
 // and later from boot/bootother.S on all other processors.
@@ -52,6 +62,7 @@ init(void)
 
 	// Lab 1: test cprintf and debug_trace
 	cprintf("1234 decimal is %o octal!\n", 1234);
+	//inittests();
 	debug_check();
 
 	// Initialize and load the bootstrap CPU's GDT, TSS, and IDT.

@@ -73,13 +73,14 @@ video_putc(int c)
 	case '\r':
 		crt_pos -= (crt_pos % CRT_COLS);
 		break;
-	case '\t':
-		video_putc(' ');
-		video_putc(' ');
-		video_putc(' ');
-		video_putc(' ');
-		video_putc(' ');
+	case '\t': {
+		/*The following loop was earlier implemented as 5 consecutive calls to video_putc(). This just seemed so wrong that I fixed it, adding a constant for storing a customisable tab width.*/
+		int i;
+		for (i=0;i<TAB_SIZE;i=i+1) { 
+			video_putc(' ');
+		}
 		break;
+	}
 	default:
 		crt_buf[crt_pos++] = c;		/* write the character */
 		break;

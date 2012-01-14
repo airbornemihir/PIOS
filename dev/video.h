@@ -30,6 +30,8 @@
 #define CRT_COLS	80
 #define CRT_SIZE	(CRT_ROWS * CRT_COLS)
 
+#define TAB_SIZE	5
+
 
 void video_init(void);
 void video_putc(int c);
