@@ -72,7 +72,7 @@ debug_trace(uint32_t ebp, uint32_t eips[DEBUG_TRACEFRAMES])
 {
 	uint32_t eip=*(((uint32_t *)ebp)+1);
 	int i=0;
-	while (ebp!=0x000000) {
+	while ((ebp!=0x000000)&&(i<DEBUG_TRACEFRAMES)) {
 		cprintf("ebp=%x, eip=%x\n", ebp, eip);
 		//cprintf("%x %x %x %x %x\n", *(((uint32_t *)ebp)+0), *(((uint32_t *)ebp)-1), *(((uint32_t *)ebp)-2), *(((uint32_t *)ebp)-3), *(((uint32_t *)ebp)-4));
 		eips[i]=eip;
@@ -80,13 +80,14 @@ debug_trace(uint32_t ebp, uint32_t eips[DEBUG_TRACEFRAMES])
 		eip=*(((uint32_t *)ebp)+1);
 		i=i+1;
 	}
-	panic("debug_trace not implemented");
 	while (i<DEBUG_TRACEFRAMES) {
 		eips[i]=0x000000;
+		i=i+1;
 	}
 	for (i=0;i<DEBUG_TRACEFRAMES;i=i+1) {
-		cprintf("eips[%d]=%x", i, eips[i]);
+		cprintf("eips[%d]=%x\n", i, eips[i]);
 	}
+	//panic("debug_trace not implemented");
 }
 
 
