@@ -42,8 +42,9 @@ trap_init(void)
 {
 	// The first time we get called on the bootstrap processor,
 	// initialize the IDT.  Other CPUs will share the same IDT.
-	if (cpu_onboot())
+	if (cpu_onboot()) {
 		trap_init_idt();
+	}
 
 	// Load the IDT into this processor's IDT register.
 	asm volatile("lidt %0" : : "m" (idt_pd));
