@@ -39,6 +39,14 @@ cpu cpu_boot = {
 		// 0x10 - kernel data segment
 		[CPU_GDT_KDATA >> 3] = SEGDESC32(STA_W, 0x0,
 					0xffffffff, 0),
+
+		// 0x08 - user code segment
+		[CPU_GDT_UCODE >> 3] = SEGDESC32(STA_X | STA_R, 0x0,
+					0xffffffff, 3),
+
+		// 0x10 - user data segment
+		[CPU_GDT_UDATA >> 3] = SEGDESC32(STA_W, 0x0,
+					0xffffffff, 3),
 	},
 
 	magic: CPU_MAGIC
@@ -55,11 +63,11 @@ void cpu_init()
 	asm volatile("lgdt %0" : : "m" (gdt_pd));
 
 	// Reload all segment registers.
-	asm volatile("movw %%ax,%%gs" :: "a" (CPU_GDT_UDATA|3));
-	asm volatile("movw %%ax,%%fs" :: "a" (CPU_GDT_UDATA|3));
-	asm volatile("movw %%ax,%%es" :: "a" (CPU_GDT_KDATA));
-	asm volatile("movw %%ax,%%ds" :: "a" (CPU_GDT_KDATA));
-	asm volatile("movw %%ax,%%ss" :: "a" (CPU_GDT_KDATA));
+	asm volatile("movw %%ax,%%gs" :: "r" (CPU_GDT_UDATA|3));
+	asm volatile("movw %%ax,%%fs" :: "r" (CPU_GDT_UDATA|3));
+	asm volatile("movw %%ax,%%es" :: "r" (CPU_GDT_KDATA));
+	asm volatile("movw %%ax,%%ds" :: "r" (CPU_GDT_KDATA));
+	asm volatile("movw %%ax,%%ss" :: "r" (CPU_GDT_KDATA));
 	asm volatile("ljmp %0,$1f\n 1:\n" :: "i" (CPU_GDT_KCODE)); // reload CS
 
 	// We don't need an LDT.

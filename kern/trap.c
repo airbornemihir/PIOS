@@ -17,6 +17,7 @@
 #include <kern/console.h>
 #include <kern/init.h>
 
+extern int vectors[];
 
 // Interrupt descriptor table.  Must be built at run time because
 // shifted function addresses can't be represented in relocation records.
@@ -34,7 +35,11 @@ trap_init_idt(void)
 {
 	extern segdesc gdt[];
 	
-	panic("trap_init() not implemented.");
+	int i;
+	for (i=0;i<20;i=i+1) {
+		SETGATE(idt[i], 0, 1<<3, vectors[i], 0); //that 1<<3 corresponds to SEG_KCODE<<3 from xv6.
+	}
+	//panic("trap_init() not implemented.");
 }
 
 void
@@ -241,3 +246,15 @@ trap_check(void **argsp)
 	*argsp = NULL;	// recovery mechanism not needed anymore
 }
 
+/*
+void gcc_noreturn trap_return (trapframe *tf) {
+	//register int *e asm ("es");
+	//register int *d asm ("ds");
+	//asm volatile("popal");
+	//asm volatile("popl %0" : "=X" (e));
+	//asm volatile("popl %0" : "=X" (d));
+	//asm volatile("iret");
+	register int *sp asm ("esp");
+	asm volatile ("movw %1 %0;jmp %2" : "=X" (sp): "X" (tf), "X" (tf->tf_eip));
+}
+*/

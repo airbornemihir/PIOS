@@ -75,6 +75,8 @@ extern cpu cpu_boot;
 static inline cpu *
 cpu_cur() {
 	cpu *c = (cpu*)ROUNDDOWN(read_esp(), PAGESIZE);
+	//Following stuff is for debugging purposes.
+	//cpu d=*c;
 	assert(c->magic == CPU_MAGIC);
 	return c;
 }

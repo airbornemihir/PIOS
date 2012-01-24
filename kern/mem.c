@@ -82,20 +82,23 @@ mem_init(void)
 	//     Which pages hold the kernel and the pageinfo array?
 	//     (See the comment on the start[] and end[] symbols above.)
 	// Change the code to reflect this.
+	mem_pageinfo=0x0; //The page table is now supposed to start from the beginning of memory.
 	pageinfo **freetail = &mem_freelist;
 	int i;
 	for (i = 0; i < mem_npage; i++) {
-		// A free page has no references to it.
-		mem_pageinfo[i].refcount = 0;
+		if ((i!=0) && (i!=1) && ((i<MEM_IO) || (i>=MEM_EXT)) && ((i<(int)start) || (i>(int)end))) {
+			// A free page has no references to it.
+			mem_pageinfo[i].refcount = 0;
 
-		// Add the page to the end of the free list.
-		*freetail = &mem_pageinfo[i];
-		freetail = &mem_pageinfo[i].free_next;
+			// Add the page to the end of the free list.
+			*freetail = &mem_pageinfo[i];
+			freetail = &mem_pageinfo[i].free_next;
+		}
 	}
 	*freetail = NULL;	// null-terminate the freelist
 
 	// ...and remove this when you're ready.
-	panic("mem_init() not implemented");
+	//panic("mem_init() not implemented");
 
 	// Check to make sure the page allocator seems to work correctly.
 	mem_check();
