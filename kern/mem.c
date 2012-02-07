@@ -33,7 +33,6 @@ pageinfo *mem_pageinfo;		// Metadata array indexed by page number
 
 pageinfo *mem_freelist;		// Start of free page list
 
-
 void mem_check(void);
 
 void
@@ -82,20 +81,51 @@ mem_init(void)
 	//     Which pages hold the kernel and the pageinfo array?
 	//     (See the comment on the start[] and end[] symbols above.)
 	// Change the code to reflect this.
-	mem_pageinfo=0x0; //The page table is now supposed to start from the beginning of memory.
+	mem_pageinfo=(pageinfo *)ROUNDUP(((int)end), sizeof(pageinfo)); //The page table is now supposed to start from the beginning of memory.
+	memset(mem_pageinfo, 0, mem_npage*sizeof(pageinfo));
 	pageinfo **freetail = &mem_freelist;
 	int i;
+	cprintf("Starting to build the free list.\n");
+
+	//This flag is so that we can know when we are at the head of the freelist we are building and set mem_freelist accordingly.
+	int headflag=1; 
+
 	for (i = 0; i < mem_npage; i++) {
-		if ((i!=0) && (i!=1) && ((i<MEM_IO) || (i>=MEM_EXT)) && ((i<(int)start) || (i>(int)end))) {
+		if (
+			(i!=0) && 
+			(i!=1) && 
+			((i<(MEM_IO / PAGESIZE)) || (i>=(MEM_EXT/PAGESIZE))) && 
+			((i<((int)start / PAGESIZE)) || (i>(ROUNDUP((int)end,sizeof(pageinfo))+mem_npage*sizeof(pageinfo))/PAGESIZE))
+		) {
+			//cprintf("i=0x%x taken.\n", i);
 			// A free page has no references to it.
 			mem_pageinfo[i].refcount = 0;
+
+			//Setting mem_freelist.
+			//if (headflag==1) {headflag=0;mem_freelist=&mem_pageinfo[i];cprintf("i=%d, setting mem_freelist.\n", i);}
 
 			// Add the page to the end of the free list.
 			*freetail = &mem_pageinfo[i];
 			freetail = &mem_pageinfo[i].free_next;
+
+			//Trying to debug a mysterious NULL pointer.
+			if ((int)freetail==0x10a000) {cprintf("i=%d is the culprit! %x\n", i,(int)(freetail));}
+			if(i == 513) cprintf("i=%d is the culprit! %x\n", i,(int)(freetail));;
+		}
+		else {
+			mem_pageinfo[i].refcount = 1;
 		}
 	}
 	*freetail = NULL;	// null-terminate the freelist
+	cprintf("Finished building the free list.\n");
+	cprintf("MEM_IO=0x%x\n", MEM_IO);
+	cprintf("MEM_EXT=0x%x\n", MEM_EXT);
+	cprintf("extmem=0x%x\n", extmem);
+	cprintf("mem_max=0x%x\n", mem_max);
+	cprintf("PAGESIZE=0x%x\n", PAGESIZE);
+	cprintf("mem_npage=0x%x\n", mem_npage);
+	cprintf("sizeof(struct pageinfo)=0x%x\n", sizeof(struct pageinfo));
+	cprintf("sizeof(pageinfo)=0x%x\n", sizeof(pageinfo));
 
 	// ...and remove this when you're ready.
 	//panic("mem_init() not implemented");
@@ -120,7 +150,15 @@ mem_alloc(void)
 {
 	// Fill this function in
 	// Fill this function in.
-	panic("mem_alloc not implemented.");
+	if (mem_freelist==NULL) {
+		return NULL;
+	}
+	else {
+		pageinfo *ret=mem_freelist;
+		mem_freelist=ret->free_next;
+		return ret;
+	}
+	//panic("mem_alloc not implemented.");
 }
 
 //
@@ -131,7 +169,11 @@ void
 mem_free(pageinfo *pi)
 {
 	// Fill this function in.
-	panic("mem_free not implemented.");
+	if ((pi->refcount)==0) {
+		pi->free_next=mem_freelist;
+		mem_freelist=pi;
+	}
+	//panic("mem_free not implemented.");
 }
 
 // Atomically increment the reference count on a page.
@@ -177,6 +219,8 @@ mem_check()
 	for (pp = mem_freelist; pp != 0; pp = pp->free_next) {
 		memset(mem_pi2ptr(pp), 0x97, 128);
 		freepages++;
+		//Debugging a false pointer.
+		//cprintf("pp=0x%x, freepages=%d\n", pp, freepages);
 	}
 	cprintf("mem_check: %d free pages\n", freepages);
 	assert(freepages < mem_npage);	// can't have more free than total!
@@ -191,9 +235,9 @@ mem_check()
 	assert(pp0);
 	assert(pp1 && pp1 != pp0);
 	assert(pp2 && pp2 != pp1 && pp2 != pp0);
-        assert(mem_pi2phys(pp0) < mem_npage*PAGESIZE);
-        assert(mem_pi2phys(pp1) < mem_npage*PAGESIZE);
-        assert(mem_pi2phys(pp2) < mem_npage*PAGESIZE);
+	assert(mem_pi2phys(pp0) < mem_npage*PAGESIZE);
+	assert(mem_pi2phys(pp1) < mem_npage*PAGESIZE);
+	assert(mem_pi2phys(pp2) < mem_npage*PAGESIZE);
 
 	// temporarily steal the rest of the free pages
 	fl = mem_freelist;

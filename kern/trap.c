@@ -39,6 +39,8 @@ trap_init_idt(void)
 	for (i=0;i<20;i=i+1) {
 		SETGATE(idt[i], 0, 1<<3, vectors[i], 0); //that 1<<3 corresponds to SEG_KCODE<<3 from xv6.
 	}
+	SETGATE(idt[3], 0, 1<<3, vectors[3], 3); //This is T_BRKPT, that 1<<3 corresponds to SEG_KCODE<<3 from xv6.
+	SETGATE(idt[4], 0, 1<<3, vectors[4], 3); //This is T_OFLOW, that 1<<3 corresponds to SEG_KCODE<<3 from xv6.
 	//panic("trap_init() not implemented.");
 }
 

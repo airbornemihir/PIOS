@@ -32,13 +32,7 @@ static char gcc_aligned(16) user_stack[PAGESIZE];
 extern char ROOTEXE_START[];
 
 void inittests() {
-	/*
-	int x = 1, y = 3, z = 4;
-	cprintf("x %d, y %x, z %d\n", x, y, z);
-	*/
-	unsigned int i = 0x00646c72;
-	cprintf("H%x Wo%s", 57616, &i);
-	cprintf("\n");
+	cprintf("1024=%d\n", 1024);
 }
 
 
@@ -62,7 +56,7 @@ init(void)
 
 	// Lab 1: test cprintf and debug_trace
 	cprintf("1234 decimal is %o octal!\n", 1234);
-	//inittests();
+	inittests();
 	debug_check();
 
 	// Initialize and load the bootstrap CPU's GDT, TSS, and IDT.
@@ -77,7 +71,29 @@ init(void)
 	// Lab 1: change this so it enters user() in user mode,
 	// running on the user_stack declared above,
 	// instead of just calling user() directly.
-	user();
+	/*
+	char *loc=user_stack-sizeof(trapframe);
+	register int *sp asm ("esp");
+	asm volatile ("mov %0 %1" : "=r"(sp) : "X"(loc));
+	*/
+	trapframe tf;
+	//register int *csreg asm ("cs");
+	//tf.tf_cs=(*csreg)|3; //setting the privilege mode
+	tf.tf_esp=(uintptr_t)user_stack;
+	tf.tf_eflags=read_eflags();
+	//tf.tf_ebp=read_ebp();
+	tf.tf_cs=read_cs();
+	//
+	tf.tf_cs = (CPU_GDT_UCODE) | 3;
+	tf.tf_ds = (CPU_GDT_UDATA) | 3;
+	tf.tf_es = tf.tf_ds;
+	tf.tf_ss = tf.tf_ds;
+	tf.tf_eflags = FL_IOPL_3;
+	tf.tf_esp = (uintptr_t)user_stack+PAGESIZE;
+	tf.tf_eip = (uint32_t)&user;
+	//
+	trap_return(&tf);
+	//user();
 }
 
 // This is the first function that gets run in user mode (ring 3).

@@ -74,3 +74,4 @@ void mem_decref(pageinfo* pp);
 
 
 #endif /* !PIOS_KERN_MEM_H */
+

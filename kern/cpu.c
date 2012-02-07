@@ -40,11 +40,11 @@ cpu cpu_boot = {
 		[CPU_GDT_KDATA >> 3] = SEGDESC32(STA_W, 0x0,
 					0xffffffff, 0),
 
-		// 0x08 - user code segment
+		// 0x18 - user code segment
 		[CPU_GDT_UCODE >> 3] = SEGDESC32(STA_X | STA_R, 0x0,
 					0xffffffff, 3),
 
-		// 0x10 - user data segment
+		// 0x20 - user data segment
 		[CPU_GDT_UDATA >> 3] = SEGDESC32(STA_W, 0x0,
 					0xffffffff, 3),
 	},
@@ -56,6 +56,13 @@ cpu cpu_boot = {
 void cpu_init()
 {
 	cpu *c = cpu_cur();
+
+	(c->tss).ts_esp0=(uintptr_t)&c->kstackhi;
+	(c->tss).ts_ss0=CPU_GDT_KDATA;
+
+	c->gdt[CPU_GDT_TSS >> 3]=SEGDESC16(STS_T32A, (uint32_t)&(c->tss),
+					sizeof(struct taskstate), 0);
+	c->gdt[CPU_GDT_TSS >> 3].sd_s=0;
 
 	// Load the GDT
 	struct pseudodesc gdt_pd = {
@@ -72,6 +79,9 @@ void cpu_init()
 
 	// We don't need an LDT.
 	asm volatile("lldt %%ax" :: "a" (0));
+
+	ltr(CPU_GDT_TSS);
+	
 }
 
 

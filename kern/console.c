@@ -112,8 +112,8 @@ cons_init(void)
 void
 cputs(const char *str)
 {
-	if (read_cs() & 3)
-		return ;//LAB1 sys_cputs(str);	// use syscall from user mode
+//	if (read_cs() & 3) //This line is commented because there's a glitch somewhere...
+//		return ;//LAB1 sys_cputs(str);	// use syscall from user mode
 
 	char ch;
 	while (*str)
